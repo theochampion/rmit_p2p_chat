@@ -1,10 +1,13 @@
 package model;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.security.GeneralSecurityException;
 import java.util.*;
 
 import dht.DHTNetwork;
 import network.*;
+import security.AsymCryptoHelper;
 import view.*;
 
 /**
@@ -23,6 +26,7 @@ public class ClientModel implements Runnable {
 
 	private ClientNetwork network;
 	private ClientConsole console;
+	private AsymCryptoHelper cryptoHelper;
 	private DHTNetwork dht;
 	private ClientView view;
 	private ClientLogin login;
@@ -41,6 +45,11 @@ public class ClientModel implements Runnable {
 		serverRegistered = false;
 		peerList = new HashMap<String, Peer>();
 		username = "N/A";
+		try {
+			cryptoHelper = new AsymCryptoHelper("RSA", 512);
+		} catch (GeneralSecurityException e) {
+
+		}
 	}
 
 	/**
@@ -207,7 +216,11 @@ public class ClientModel implements Runnable {
 	 * the server.
 	 */
 	public void registerClient() {
-		network.registerClient(username, serverIP, serverPort, "MyPuBliCKeY");
+		try {
+			network.registerClient(username, serverIP, serverPort, cryptoHelper.getPublicKeyAsString());
+		} catch (GeneralSecurityException e) {
+
+		}
 	}
 
 	/**
@@ -230,6 +243,13 @@ public class ClientModel implements Runnable {
 	 * @param message    The message contents.
 	 */
 	public void receiveMessage(String srcAddress, int srcPort, String time, String message) {
+		try {
+			message = cryptoHelper.decryptString(message);
+		} catch (GeneralSecurityException e) {
+
+		} catch (UnsupportedEncodingException e) {
+
+		}
 		// Determine which peer sent the message.
 		for (Peer peer : peerList.values()) {
 			if ((peer.getAddress().equalsIgnoreCase(srcAddress)) && (peer.getPort() == srcPort)) {
@@ -258,8 +278,16 @@ public class ClientModel implements Runnable {
 			if (peer.getUsername().equalsIgnoreCase(username)) {
 				String destAddress = peer.getAddress();
 				int destPort = peer.getPort();
+				String peerPublicKey = peer.getPublicKey();
 
-				network.sendMessage(message, destAddress, destPort);
+				try {
+					network.sendMessage(cryptoHelper.encryptStringWithEncodedKey(message, peerPublicKey, "RSA"),
+							destAddress, destPort);
+				} catch (GeneralSecurityException e) {
+
+				} catch (UnsupportedEncodingException e) {
+
+				}
 			}
 		}
 	}
