@@ -1,9 +1,9 @@
 package model;
 
 /**
- * This class stores all information about a single peer. The model
- * class keeps peers in a list so they can be accessed as a group
- * or individually.
+ * This class stores all information about a single peer. The model class keeps
+ * peers in a list so they can be accessed as a group or individually.
+ * 
  * @author Alex
  * @version 0.2
  * @since 0.1
@@ -13,44 +13,55 @@ public class Peer {
 	private String username;
 	private String address;
 	private int port;
-	
+	private String publicKey;
+
 	/**
 	 * Constructor for Peer class.
+	 * 
 	 * @param username Username of new peer.
-	 * @param address IP address of peer.
-	 * @param port Port number of peer.
+	 * @param address  IP address of peer.
+	 * @param port     Port number of peer.
 	 */
-	public Peer(String username, String address, int port)
-	{
+	public Peer(String username, String address, int port, String publicKey) {
 		this.username = username;
 		this.address = address;
 		this.port = port;
+		this.publicKey = publicKey;
 	}
-	
+
 	/**
 	 * Getter for peer username.
+	 * 
 	 * @return String username of peer.
 	 */
-	public String getUsername()
-	{
+	public String getUsername() {
 		return username;
 	}
-	
+
 	/**
 	 * Getter for IP address of peer.
+	 * 
 	 * @return String IP address of peer.
 	 */
-	public String getAddress()
-	{
+	public String getAddress() {
 		return address;
 	}
-	
+
 	/**
 	 * Getter for port number for peer.
+	 * 
 	 * @return Port number of peer.
 	 */
-	public int getPort()
-	{
+	public int getPort() {
 		return port;
+	}
+
+	/**
+	 * Getter for public key for peer.
+	 * 
+	 * @return Public key of peer.
+	 */
+	public String getPublicKey() {
+		return publicKey;
 	}
 }
