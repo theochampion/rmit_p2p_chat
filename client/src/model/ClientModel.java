@@ -7,7 +7,8 @@ import java.util.*;
 
 import dht.DHTNetwork;
 import network.*;
-import security.AsymCryptoHelper;
+import security.CustomRSA;
+import security.KeyPair;
 import view.*;
 
 /**
@@ -26,7 +27,7 @@ public class ClientModel implements Runnable {
 
 	private ClientNetwork network;
 	private ClientConsole console;
-	private AsymCryptoHelper cryptoHelper;
+	private KeyPair keyPair;
 	private DHTNetwork dht;
 	private ClientView view;
 	private ClientLogin login;
@@ -45,11 +46,8 @@ public class ClientModel implements Runnable {
 		serverRegistered = false;
 		peerList = new HashMap<String, Peer>();
 		username = "N/A";
-		try {
-			cryptoHelper = new AsymCryptoHelper("RSA", 512);
-		} catch (GeneralSecurityException e) {
-
-		}
+		// generate RSA keys to be used by this client
+		keyPair = CustomRSA.generateKeys(1024);
 	}
 
 	/**
@@ -216,11 +214,7 @@ public class ClientModel implements Runnable {
 	 * the server.
 	 */
 	public void registerClient() {
-		try {
-			network.registerClient(username, serverIP, serverPort, cryptoHelper.getPublicKeyAsString());
-		} catch (GeneralSecurityException e) {
-
-		}
+		network.registerClient(username, serverIP, serverPort, keyPair.pubKey);
 	}
 
 	/**
@@ -243,13 +237,7 @@ public class ClientModel implements Runnable {
 	 * @param message    The message contents.
 	 */
 	public void receiveMessage(String srcAddress, int srcPort, String time, String message) {
-		try {
-			message = cryptoHelper.decryptString(message);
-		} catch (GeneralSecurityException e) {
-
-		} catch (UnsupportedEncodingException e) {
-
-		}
+		message = CustomRSA.decrypt(message, keyPair.privKey);
 		// Determine which peer sent the message.
 		for (Peer peer : peerList.values()) {
 			if ((peer.getAddress().equalsIgnoreCase(srcAddress)) && (peer.getPort() == srcPort)) {
@@ -280,14 +268,7 @@ public class ClientModel implements Runnable {
 				int destPort = peer.getPort();
 				String peerPublicKey = peer.getPublicKey();
 
-				try {
-					network.sendMessage(cryptoHelper.encryptStringWithEncodedKey(message, peerPublicKey, "RSA"),
-							destAddress, destPort);
-				} catch (GeneralSecurityException e) {
-
-				} catch (UnsupportedEncodingException e) {
-
-				}
+				network.sendMessage(CustomRSA.encrypt(message, peerPublicKey), destAddress, destPort);
 			}
 		}
 	}
